@@ -1,8 +1,0 @@
-### 常用的python内建函数
-
-abs(number)	返回一个数的绝对值
-apply(function[, args[, kwds]])	调用给定函数，可选择提供参数
-all(iterable)	如果所有iterable的元素均为真则返回True, 否则返回False
-any(iterable)	如果有任一iterable的元素为真则返回True，否则返回False
-basestring()	str和unicode抽象超类，用于检查类型
-bool(object)	返回True或False，取决于Object的布尔值
