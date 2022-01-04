@@ -12,8 +12,8 @@
 * Cfg 用于与应用层配置对接
 * Ports 用于与底层平台对接
 * Source 源代码
-* TLS 新特性(先不看)
-* Trace 说明
+* TLS 新特性(先不看)   
+* Trace 说明(先不看)
 
 Ports结构以ARM-Cortex-M/ARMv6-M为例:
 * ARM 
