@@ -49,3 +49,7 @@ Ports结构以ARM-Cortex-M/ARMv6-M为例:
 13. os.h:正常情况下不会使用,作用是与ucos3兼容
 14. ucos_ii.h:内部函数参数设置
 15. ucos_ii.c:防止文件包含
+
+---
+
+逐步做解析
