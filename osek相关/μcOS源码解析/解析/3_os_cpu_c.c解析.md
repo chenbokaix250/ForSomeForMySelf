@@ -10,7 +10,8 @@ os_cpu_c.c定义了9个钩子(Hook)函数和一个堆栈初始化函数。
 虽说uCOS-II提供了许多钩子函数，但在实际移植我们可以实现的也就9个，这9个就位于当前文件os_cpu_c.c。钩子函数的声明是必须的，但不是必须定义。
 
 1. 系统定时器SysTick寄存器定义
-```/*
+```
+/*
 *********************************************************************************************************
 *                                          SYS TICK DEFINES
 *********************************************************************************************************
@@ -26,10 +27,12 @@ os_cpu_c.c定义了9个钩子(Hook)函数和一个堆栈初始化函数。
 #define  OS_CPU_CM3_NVIC_ST_CTRL_CLK_SRC                  0x00000004uL   /* Clock Source.              */
 #define  OS_CPU_CM3_NVIC_ST_CTRL_INTEN                    0x00000002uL   /* Interrupt enable.          */
 #define  OS_CPU_CM3_NVIC_ST_CTRL_ENABLE                   0x00000001uL   /* Counter mode.              */
-#define  OS_CPU_CM3_NVIC_PRIO_MIN                               0xFFu    /* Min handler prio.          */```
+#define  OS_CPU_CM3_NVIC_PRIO_MIN                               0xFFu    /* Min handler prio.          */
+```
 
 2. 系统初始化函数开头时会调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u    //OS_CPU_HOOKS_EN宏在os_cfg.h中
+```
+#if OS_CPU_HOOKS_EN > 0u    //OS_CPU_HOOKS_EN宏在os_cfg.h中
 //系统初始化函数OSInit()开头调用
 void  OSInitHookBegin (void)    //系统初始化函数开头的钩子函数
 {
@@ -50,21 +53,25 @@ void  OSInitHookBegin (void)    //系统初始化函数开头的钩子函数
     OSTmrCtr = 0u;  //当使用os_tmr.c定时器管理模块，初始化系统节拍计数数量OSTmrCtr为0，每个节拍会使得OSTmrCtr加1
 #endif
 }
-#endif```
+#endif
+```
 
 OS_CPU_HOOKS_EN是以操作系统配置宏。在uCOS-II中，类似于xxxx_EN这样的宏都是操作系统配置宏，它们一般被宏定义在os_cpu_cfg.h文件中。用于裁剪系统功能。这个文件理论是需要系统使用者编写的，但是我们一般采用移植的方法，使用现有的文件加以修改即可。
 
 OS_CPU_HOOKS_EN大于0表示当前系统使用了钩子函数这个功能。下来的8个钩子函数也都有OS_CPU_HOOKS_EN的判断操作。
 
 3. 系统初始化函数结束时会调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSInitHookEnd (void)  //系统初始化函数结束的钩子函数
 {
 }
-#endif```
+#endif
+```
 
 4. 创建任务时会调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTaskCreateHook (OS_TCB *ptcb)   //创建任务的钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u            //若有定义应用任务
@@ -73,12 +80,14 @@ void  OSTaskCreateHook (OS_TCB *ptcb)   //创建任务的钩子函数
     (void)ptcb;                     //告诉编译器ptcb没有用到。
 #endif
 }
-#endif```
+#endif
+```
 
 这个函数是在OSTaskCreate()或OSTaskCreateExt()中调用的。
 
 5. 删除任务时会调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTaskDelHook (OS_TCB *ptcb)
 {
 #if OS_APP_HOOKS_EN > 0u
@@ -87,20 +96,24 @@ void  OSTaskDelHook (OS_TCB *ptcb)
    (void)ptcb; 
 #endif
 }
-#endif```
+#endif
+```
 
 6. 空闲任务调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTaskIdleHook (void) //空闲任务钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u
     App_TaskIdleHook();
 #endif
 }
-#endif```
+#endif
+```
 
 7. 任务返回时调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTaskReturnHook (OS_TCB  *ptcb)  //任务返回的钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u
@@ -109,22 +122,26 @@ void  OSTaskReturnHook (OS_TCB  *ptcb)  //任务返回的钩子函数
     (void)ptcb;
 #endif
 }
-#endif```
+#endif
+```
 
 8. 统计任务调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTaskStatHook (void) //统计任务钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u
     App_TaskStatHook();
 #endif
 }
-#endif```
+#endif
+```
 
 9. 任务堆结构初始化函数
 c语言的函数运行需要栈来支持，局部变量就是栈这种数据结构来实现的。栈其实就是os管理内存的一种方式，os是通过栈指针sp来管理栈内存的。在单片机裸机程序中，整个程序使用一个栈，这个栈是跟main共用的栈。在os中则不一样，因为os中有任务的概念，任务在宏观上实现并行，需要现场的保护和恢复，所以不同的任务就不能共用栈。每个任务都要自己的私有栈。
 
-```OS_STK *OSTaskStkInit (void (*task)(void *p_arg), void *p_arg, OS_STK *ptos, INT16U opt)
+```
+OS_STK *OSTaskStkInit (void (*task)(void *p_arg), void *p_arg, OS_STK *ptos, INT16U opt)
 {
     OS_STK *stk;
 
@@ -153,7 +170,8 @@ c语言的函数运行需要栈来支持，局部变量就是栈这种数据结�
     *(--stk)  = (INT32U)0x04040404uL;            /* R4                                                 */
 
     return (stk);
-}```
+}
+```
 
 OSTaskStkInit()的作用就是对任务的栈内存进行初始化，我们每创建一个任务，都应该调用这个函数对任务的私有栈进行初始化，之后再去使用。
 参数1: 指向任务的执行代码
@@ -169,17 +187,20 @@ ARM是满降栈，也就是sp指针指向的内容都是满的，但是一开始
 (4) R0用于传递任务的参数，等于p_arg
 
 10. 切换任务时被调用的钩子函数
-```#if (OS_CPU_HOOKS_EN > 0u) && (OS_TASK_SW_HOOK_EN > 0u)
+```
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_TASK_SW_HOOK_EN > 0u)
 void  OSTaskSwHook (void)   //切换任务时被调用的钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u    //如果有定义应用任务
     App_TaskSwHook();       //应用任务切换调用的钩子函数
 #endif
 }
-#endif```
+#endif
+```
 
 11. 初始任务控制块化时调用的钩子函数
-```#if OS_CPU_HOOKS_EN > 0u
+```
+#if OS_CPU_HOOKS_EN > 0u
 void  OSTCBInitHook (OS_TCB *ptcb)  //初始任务控制块化时调用的钩子函数
 {
 #if OS_APP_HOOKS_EN > 0u
@@ -188,12 +209,14 @@ void  OSTCBInitHook (OS_TCB *ptcb)  //初始任务控制块化时调用的钩子
     (void)ptcb;
 #endif
 }
-#endif```
+#endif
+```
 
 TCB即Task Control Block，任务控制块，记录了系统中每个任务的状态、属性信息。
 
 12. 时钟节拍到了以后调用的钩子函数
-```#if (OS_CPU_HOOKS_EN > 0u) && (OS_TIME_TICK_HOOK_EN > 0u)
+```
+#if (OS_CPU_HOOKS_EN > 0u) && (OS_TIME_TICK_HOOK_EN > 0u)
 void  OSTimeTickHook (void)
 {
 #if OS_APP_HOOKS_EN > 0u
@@ -211,10 +234,12 @@ void  OSTimeTickHook (void)
     }
 #endif
 }
-#endif```
+#endif
+```
 
 13. SysTick超时后执行的函数
-```void  OS_CPU_SysTickHandler (void)
+```
+void  OS_CPU_SysTickHandler (void)
 {
     /* 进入临界区，OSIntNesting是全局变量，操作该变量时希望不被中断打扰 */
     OS_CPU_SR  cpu_sr;
@@ -228,10 +253,12 @@ void  OSTimeTickHook (void)
     OSTimeTick();                                /* Call uC/OS-II's OSTimeTick()                       */
 
     OSIntExit();                                 /* Tell uC/OS-II that we are leaving the ISR          */
-}```
+}
+```
 
 14. 初始化SysTick定时器
-```void  OS_CPU_SysTickInit (INT32U  cnts)
+```
+void  OS_CPU_SysTickInit (INT32U  cnts)
 {
     //使能SysTick定时器
     OS_CPU_CM3_NVIC_ST_RELOAD = cnts - 1u;
@@ -243,7 +270,8 @@ void  OSTimeTickHook (void)
     OS_CPU_CM3_NVIC_ST_CTRL  |= OS_CPU_CM3_NVIC_ST_CTRL_CLK_SRC | OS_CPU_CM3_NVIC_ST_CTRL_ENABLE;
                                                  /* Enable timer interrupt.                            */
     OS_CPU_CM3_NVIC_ST_CTRL  |= OS_CPU_CM3_NVIC_ST_CTRL_INTEN;
-}```
+}
+```
 
 OS_CPU_SysTickInit会被第一个任务调用，用于初始化SysTick定时器。
 

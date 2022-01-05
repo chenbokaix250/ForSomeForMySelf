@@ -43,19 +43,23 @@ REQUIRE8                                ; 指定当前文件要求堆栈八字�
 PRESERVE8                               ; 指定当前文件保持堆栈八字节对齐
 ```
 4. 开关中断源函数实现
-```OS_CPU_SR_Save
+```
+OS_CPU_SR_Save
     MRS     R0, PRIMASK     ; 保存全局中断标志，将PRIMASK的值保存在R0(保存全局中断标志)
     CPSID   I               ; 关闭中断
     BX      LR              ; LR保存在函数调用前的地址，跳转回LR地址处，返回值保存在R0
 
 OS_CPU_SR_Restore
     MSR     PRIMASK, R0     ; 读取R0的值设置PRIMASK(恢复全局中断标志)，通过R0传递参数
-    BX      LR              ; LR保存在函数调用前的地址，跳转回LR地址处```
+    BX      LR              ; LR保存在函数调用前的地址，跳转回LR地址处
+```
 
 OS_CPU_SR_Save和OS_CPU_SR_Restore在前面的os_cpu.h文件中出现过：
 
-```#define  OS_ENTER_CRITICAL()  {cpu_sr = OS_CPU_SR_Save();}
-#define  OS_EXIT_CRITICAL()   {OS_CPU_SR_Restore(cpu_sr);}```
+```
+#define  OS_ENTER_CRITICAL()  {cpu_sr = OS_CPU_SR_Save();}
+#define  OS_EXIT_CRITICAL()   {OS_CPU_SR_Restore(cpu_sr);}
+```
 
 用于实现临界区的保护。
 
@@ -121,7 +125,8 @@ uCOS-II是一个实时操作系统，所谓”实时”就是及时响应系统�
 
 OSStartHighRdy用于启动最高优先级的任务，它被OSStart()函数调用，调用前系统中必须至少有一个用户任务，否则系统发生崩溃。
 
-```OSStartHighRdy
+```
+OSStartHighRdy
     LDR     R0, =NVIC_SYSPRI14                                  
                                                 ; 装载系统异常优先级寄存器PRI_14，即要设置PendSV的中断优先级的寄存器
     LDR     R1, =NVIC_PENDSV_PRI                ; 装载PendSV的优先级为255
@@ -145,7 +150,8 @@ OSStartHighRdy用于启动最高优先级的任务，它被OSStart()函数调用
     CPSIE   I                                   ; 开中断
 
 OSStartHang
-    B       OSStartHang                         ; 等价于 while(1); 以等待中断发生```
+    B       OSStartHang                         ; 等价于 while(1); 以等待中断发生
+```
 
 
 有了前面任务切换的认识后，上面的代码很容易理解，只是将PSP设置为0这个有点费解。
@@ -160,20 +166,24 @@ OSStartHang
 
 6. os自己使用的使能悬起PendSVd的函数
 
-```OSCtxSw
+```
+OSCtxSw
     LDR     R0, =NVIC_INT_CTRL
     LDR     R1, =NVIC_PENDSVSET
     STR     R1, [R0]
-    BX      LR```
+    BX      LR
+```
 
 这个函数是给os自己使用的切换任务，实质只是使能pendSV悬起(在pendSV服务中切换)，可以发现这个使能操作跟在OSStartHighRdy的实现是一样的。在os_core.c的OS_Sched()中调用，(被宏定义为OS_TASK_SW())，OS_Sched()用于启动任务调度功能。
 
 7. os中的在中断处理程序中实现任务切换调用的函数
-```OSIntCtxSw
+```
+OSIntCtxSw
     LDR     R0, =NVIC_INT_CTRL                                  ; Trigger the PendSV exception (causes context switch)
     LDR     R1, =NVIC_PENDSVSET
     STR     R1, [R0]
-    BX      LR```
+    BX      LR
+```
 
 os中的在中断处理程序中调用任务切换，但是在中断处理程序中是不可以随便调用其他有可能会被调度的东西的(实时性)，但是在中断退出后可以，所以此函数在OSIntExit()调用。其实质还是触发Pendsv。
 
@@ -190,7 +200,8 @@ os中的在中断处理程序中调用任务切换，但是在中断处理程序
 (7) 恢复新任务的栈的R4-R11，其他的寄存器CPU会自动帮我们恢复
 (8) 函数返回，新任务得到执行
 
-```OS_CPU_PendSVHandler
+```
+OS_CPU_PendSVHandler
     CPSID   I                                                   ; 关闭中断
     MRS     R0, PSP                                             ; 判断PSP是否为零，为零跳转OS_CPU_PendSVHandler_nosave
     CBZ     R0, OS_CPU_PendSVHandler_nosave
@@ -228,7 +239,8 @@ OS_CPU_PendSVHandler_nosave
     MSR     PSP, R0                                             ; 将栈顶指针赋给PSP  
     ORR     LR, LR, #0x04                                       ; 判断是MSP还是PSP，1表PSP。这个操作只是给予其他函数的判断提供依据 
     CPSIE   I
-    BX      LR    ```
+    BX      LR    
+```
 
 
 需要注意的是，ARM的硬件特性，进行上下文切换时，CPU 会自动保存xPSR, PC, LR, R12, R0-R3，R4-R11需要使用程序保存。当是系统刚开始运行时候，R4-R11存放是没有用的数据，所以不需要报错。判断是系统刚开始运行第一次进行上下文切换还是非第一次进行上下文切换的依据是看PSP是否等于0。
